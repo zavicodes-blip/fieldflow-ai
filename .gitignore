@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment variables
+.env
+.env.*
+
+# Node
+node_modules/
+dist/
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+
+# Editor and operating system
+.vscode/
+.DS_Store
+Thumbs.db
