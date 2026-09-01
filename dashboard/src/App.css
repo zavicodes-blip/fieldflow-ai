@@ -933,6 +933,30 @@ button {
   font-size: 0.65rem;
 }
 
+.live-update.connecting {
+  color: #b77a0c;
+}
+
+.live-update.connecting strong {
+  color: #9b680d;
+}
+
+.live-update.connected {
+  color: var(--green);
+}
+
+.live-update.connected strong {
+  color: var(--green);
+}
+
+.live-update.error {
+  color: var(--red);
+}
+
+.live-update.error strong {
+  color: var(--red);
+}
+
 @media (max-width: 1180px) {
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);

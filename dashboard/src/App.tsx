@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -30,6 +30,10 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
+import {
+  fetchEquipment,
+  type ApiEquipment,
+} from "./services/fieldflowApi";
 import "./App.css";
 
 type EquipmentStatus =
@@ -56,7 +60,7 @@ type MetricCardProps = {
   tone: "green" | "amber" | "red" | "blue";
 };
 
-const equipment: Equipment[] = [
+const initialEquipment: Equipment[] = [
   {
     id: "FF-BC-1007",
     model: "BC-150 Brush Chipper",
@@ -98,6 +102,20 @@ const equipment: Equipment[] = [
     health: 61,
   },
 ];
+
+function mapApiEquipment(item: ApiEquipment): Equipment {
+  const formattedStatus =
+    item.status.charAt(0).toUpperCase() + item.status.slice(1);
+
+  return {
+    id: item.equipment_id,
+    model: item.model,
+    category: item.category,
+    location: item.location,
+    status: formattedStatus as EquipmentStatus,
+    health: item.health_score,
+  };
+}
 
 const serviceActivity = [
   { day: "Mon", cases: 14, resolved: 11 },
@@ -187,8 +205,33 @@ function StatusBadge({ status }: { status: EquipmentStatus }) {
 }
 
 function App() {
+  const [equipment, setEquipment] =
+    useState<Equipment[]>(initialEquipment);
+  const [apiStatus, setApiStatus] = useState<
+    "connecting" | "connected" | "error"
+  >("connecting");
   const [selectedEquipmentId, setSelectedEquipmentId] =
     useState("FF-TR-3018");
+
+  useEffect(() => {
+    async function loadEquipment() {
+      try {
+        const records = await fetchEquipment();
+
+        if (records.length === 0) {
+          throw new Error("The equipment API returned no records.");
+        }
+
+        setEquipment(records.map(mapApiEquipment));
+        setApiStatus("connected");
+      } catch (error) {
+        console.error("Unable to load equipment:", error);
+        setApiStatus("error");
+      }
+    }
+
+    void loadEquipment();
+  }, []);
 
   const selectedEquipment =
     equipment.find((item) => item.id === selectedEquipmentId) ??
@@ -270,7 +313,11 @@ function App() {
               <span />
               Production
             </div>
-            <button aria-label="Notifications" className="icon-button">
+            <button
+              aria-label="Notifications"
+              className="icon-button"
+              type="button"
+            >
               <Bell size={19} />
               <i />
             </button>
@@ -287,11 +334,23 @@ function App() {
               </span>
             </div>
 
-            <div className="live-update">
+            <div className={`live-update ${apiStatus}`}>
               <Radio size={17} />
               <div>
-                <strong>Live telemetry</strong>
-                <span>Updated moments ago</span>
+                <strong>
+                  {apiStatus === "connected"
+                    ? "API connected"
+                    : apiStatus === "error"
+                      ? "API unavailable"
+                      : "Connecting to API"}
+                </strong>
+                <span>
+                  {apiStatus === "connected"
+                    ? "Equipment records synchronized"
+                    : apiStatus === "error"
+                      ? "Displaying cached equipment"
+                      : "Loading equipment records"}
+                </span>
               </div>
             </div>
           </section>
@@ -414,7 +473,11 @@ function App() {
 
               <div className="case-list">
                 {serviceCases.map((serviceCase) => (
-                  <button className="case-item" key={serviceCase.id}>
+                  <button
+                    className="case-item"
+                    key={serviceCase.id}
+                    type="button"
+                  >
                     <span
                       className={`priority-line ${serviceCase.priority.toLowerCase()}`}
                     />
@@ -490,17 +553,20 @@ function App() {
                         />
                       </linearGradient>
                     </defs>
+
                     <CartesianGrid
                       stroke="#e7e9e4"
                       strokeDasharray="4 4"
                       vertical={false}
                     />
+
                     <XAxis
                       axisLine={false}
                       dataKey="day"
                       tick={{ fill: "#81867e", fontSize: 12 }}
                       tickLine={false}
                     />
+
                     <Tooltip
                       contentStyle={{
                         background: "#171a18",
@@ -509,6 +575,7 @@ function App() {
                         color: "#ffffff",
                       }}
                     />
+
                     <Area
                       dataKey="cases"
                       fill="url(#caseGradient)"
@@ -516,6 +583,7 @@ function App() {
                       strokeWidth={2.5}
                       type="monotone"
                     />
+
                     <Area
                       dataKey="resolved"
                       fill="transparent"
@@ -535,6 +603,7 @@ function App() {
                   <p>WORKFLOW STATUS</p>
                   <h2>Automation health</h2>
                 </div>
+
                 <span className="healthy-label">
                   <CheckCircle2 size={15} />
                   Healthy
