@@ -30,6 +30,7 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
+import { TelemetryPanel } from "./components/TelemetryPanel";
 import {
   fetchEquipment,
   type ApiEquipment,
@@ -410,9 +411,8 @@ function App() {
 
                 {equipment.map((item) => (
                   <button
-                    className={`equipment-row ${
-                      selectedEquipmentId === item.id ? "selected" : ""
-                    }`}
+                    className={`equipment-row ${selectedEquipmentId === item.id ? "selected" : ""
+                      }`}
                     key={item.id}
                     onClick={() => setSelectedEquipmentId(item.id)}
                     type="button"
@@ -444,22 +444,11 @@ function App() {
                 ))}
               </div>
 
-              <div className="selected-asset">
-                <span className="pulse-ring">
-                  <Radio size={16} />
-                </span>
-                <div>
-                  <span>Selected asset</span>
-                  <strong>{selectedEquipment.model}</strong>
-                </div>
-                <p>
-                  {selectedEquipment.category} · {selectedEquipment.id}
-                </p>
-                <button type="button">
-                  Open telemetry
-                  <ChevronRight size={15} />
-                </button>
-              </div>
+              <TelemetryPanel
+                category={selectedEquipment.category}
+                equipmentId={selectedEquipment.id}
+                model={selectedEquipment.model}
+              />
             </article>
 
             <article className="panel case-panel">
