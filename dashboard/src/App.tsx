@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleGauge,
-  Clock3,
   LayoutDashboard,
   MapPin,
   Radio,
@@ -31,6 +30,7 @@ import {
   XAxis,
 } from "recharts";
 import { TelemetryPanel } from "./components/TelemetryPanel";
+import { ServiceCasePanel } from "./components/ServiceCasePanel";
 import {
   fetchEquipment,
   type ApiEquipment,
@@ -128,37 +128,13 @@ const serviceActivity = [
   { day: "Sun", cases: 16, resolved: 13 },
 ];
 
-const serviceCases = [
-  {
-    id: "CASE-1047",
-    priority: "Critical",
-    title: "Hydraulic pressure below threshold",
-    asset: "TR-95 Trencher · FF-TR-3018",
-    time: "12 min ago",
-  },
-  {
-    id: "CASE-1046",
-    priority: "High",
-    title: "Telemetry connection degraded",
-    asset: "DD-40 Drill · FF-DD-2041",
-    time: "34 min ago",
-  },
-  {
-    id: "CASE-1043",
-    priority: "Medium",
-    title: "Preventive maintenance approaching",
-    asset: "RC-60 System · FF-RC-4025",
-    time: "2 hr ago",
-  },
-];
-
 const navigation = [
   {
     title: "Workspace",
     items: [
       { label: "Overview", icon: LayoutDashboard, active: true },
       { label: "Equipment", icon: Boxes },
-      { label: "Service Cases", icon: Wrench, badge: "12" },
+      { label: "Service Cases", icon: Wrench, badge: "4" },
       { label: "AI Assistant", icon: Bot },
       { label: "Automations", icon: Workflow },
       { label: "Analytics", icon: BarChart3 },
@@ -451,53 +427,7 @@ function App() {
               />
             </article>
 
-            <article className="panel case-panel">
-              <div className="panel-heading">
-                <div>
-                  <p>SERVICE QUEUE</p>
-                  <h2>Priority cases</h2>
-                </div>
-                <span className="case-count">12 open</span>
-              </div>
-
-              <div className="case-list">
-                {serviceCases.map((serviceCase) => (
-                  <button
-                    className="case-item"
-                    key={serviceCase.id}
-                    type="button"
-                  >
-                    <span
-                      className={`priority-line ${serviceCase.priority.toLowerCase()}`}
-                    />
-                    <span className="case-content">
-                      <span className="case-meta">
-                        <strong>{serviceCase.id}</strong>
-                        <span>{serviceCase.priority}</span>
-                      </span>
-                      <b>{serviceCase.title}</b>
-                      <small>{serviceCase.asset}</small>
-                      <span className="case-time">
-                        <Clock3 size={14} />
-                        {serviceCase.time}
-                      </span>
-                    </span>
-                    <ChevronRight size={17} />
-                  </button>
-                ))}
-              </div>
-
-              <button className="agent-action" type="button">
-                <span>
-                  <Bot size={19} />
-                </span>
-                <div>
-                  <strong>Ask Service Agent</strong>
-                  <small>Investigate an equipment issue</small>
-                </div>
-                <ChevronRight size={17} />
-              </button>
-            </article>
+            <ServiceCasePanel />
           </section>
 
           <section className="secondary-grid">

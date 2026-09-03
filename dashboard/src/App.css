@@ -1155,6 +1155,17 @@ button {
   background: var(--red-soft);
 }
 
+.case-message {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #858b85;
+  font-size: 0.72rem;
+  border-top: 1px solid #eceee9;
+}
+
 @media (max-width: 660px) {
   .telemetry-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

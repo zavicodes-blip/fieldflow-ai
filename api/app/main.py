@@ -1,9 +1,30 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi import status as http_status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+
+from api.app.database import create_database, get_database_session
+from api.app.database_models import EquipmentRecord, ServiceCaseRecord
+from api.app.database_seed import seed_database
 from api.app.equipment_data import EQUIPMENT_RECORDS
 from api.app.models import Equipment, TelemetryReading
+from api.app.service_case_schemas import (
+    ServiceCaseCreate,
+    ServiceCaseResponse,
+    ServiceCaseStatus,
+)
 from api.app.telemetry_service import generate_telemetry
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    del application
+
+    create_database()
+    seed_database()
+    yield
 
 
 app = FastAPI(
@@ -13,6 +34,7 @@ app = FastAPI(
         "for the FieldFlow AI platform."
     ),
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -22,7 +44,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
     ],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -73,3 +95,63 @@ def get_equipment(equipment_id: str):
 def get_equipment_telemetry(equipment_id: str):
     equipment = find_equipment(equipment_id)
     return generate_telemetry(equipment)
+
+
+@app.get(
+    "/api/service-cases",
+    response_model=list[ServiceCaseResponse],
+)
+def get_service_cases(
+    case_status: ServiceCaseStatus | None = None,
+    database: Session = Depends(get_database_session),
+):
+    query = database.query(ServiceCaseRecord)
+
+    if case_status is not None:
+        query = query.filter(
+            ServiceCaseRecord.status == case_status.value
+        )
+
+    return query.order_by(
+        ServiceCaseRecord.created_at.desc()
+    ).all()
+
+
+@app.post(
+    "/api/service-cases",
+    response_model=ServiceCaseResponse,
+    status_code=http_status.HTTP_201_CREATED,
+)
+def create_service_case(
+    case_data: ServiceCaseCreate,
+    database: Session = Depends(get_database_session),
+):
+    equipment = database.get(
+        EquipmentRecord,
+        case_data.equipment_id,
+    )
+
+    if equipment is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Equipment {case_data.equipment_id} "
+                "was not found."
+            ),
+        )
+
+    service_case = ServiceCaseRecord(
+        equipment_id=case_data.equipment_id,
+        title=case_data.title,
+        description=case_data.description,
+        priority=case_data.priority.value,
+        status=ServiceCaseStatus.OPEN.value,
+        source=case_data.source.value,
+        assigned_to=case_data.assigned_to,
+    )
+
+    database.add(service_case)
+    database.commit()
+    database.refresh(service_case)
+
+    return service_case

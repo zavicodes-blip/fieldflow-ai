@@ -4,6 +4,10 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# Local database files
+*.db
+*.db-journal
+
 # Environment variables
 .env
 .env.*
