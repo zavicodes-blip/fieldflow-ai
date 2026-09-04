@@ -132,3 +132,38 @@ class AutomationEventRecord(Base):
     service_case: Mapped[ServiceCaseRecord | None] = relationship(
         back_populates="automation_events",
     )
+
+
+class AgentInteractionRecord(Base):
+    __tablename__ = "agent_interactions"
+    __table_args__ = (
+        Index(
+            "idx_agent_interactions_created",
+            "created_at",
+        ),
+    )
+
+    interaction_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    equipment_id: Mapped[str | None] = mapped_column(
+        String(20),
+        ForeignKey("equipment.equipment_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    user_message: Mapped[str] = mapped_column(Text)
+    detected_intent: Mapped[str] = mapped_column(String(50))
+    confidence: Mapped[float] = mapped_column(Float)
+    agent_response: Mapped[str] = mapped_column(Text)
+    action_status: Mapped[str] = mapped_column(String(40))
+    service_case_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("service_cases.case_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )

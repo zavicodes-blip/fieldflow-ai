@@ -5,6 +5,12 @@ from fastapi import status as http_status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
+from api.app.agent_schemas import (
+    AgentChatRequest,
+    AgentChatResponse,
+    AgentInteractionResponse,
+)
+from api.app.agent_service import handle_agent_chat
 from api.app.automation_schemas import (
     AutomationEvaluationResponse,
     AutomationEventResponse,
@@ -12,6 +18,7 @@ from api.app.automation_schemas import (
 from api.app.automation_service import evaluate_equipment_automation
 from api.app.database import create_database, get_database_session
 from api.app.database_models import (
+    AgentInteractionRecord,
     AutomationEventRecord,
     EquipmentRecord,
     ServiceCaseRecord,
@@ -39,10 +46,10 @@ async def lifespan(application: FastAPI):
 app = FastAPI(
     title="FieldFlow Equipment API",
     description=(
-        "Equipment telemetry and service operations API "
-        "for the FieldFlow AI platform."
+        "Equipment telemetry, intelligent automation, and "
+        "AI-assisted service operations API for FieldFlow AI."
     ),
-    version="1.1.0",
+    version="1.2.0",
     lifespan=lifespan,
 )
 
@@ -73,7 +80,7 @@ def find_equipment(equipment_id: str) -> Equipment:
 def get_api_information():
     return {
         "name": "FieldFlow Equipment API",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "status": "operational",
         "documentation": "/docs",
     }
@@ -87,12 +94,18 @@ def get_health_status():
     }
 
 
-@app.get("/api/equipment", response_model=list[Equipment])
+@app.get(
+    "/api/equipment",
+    response_model=list[Equipment],
+)
 def get_all_equipment():
     return EQUIPMENT_RECORDS
 
 
-@app.get("/api/equipment/{equipment_id}", response_model=Equipment)
+@app.get(
+    "/api/equipment/{equipment_id}",
+    response_model=Equipment,
+)
 def get_equipment(equipment_id: str):
     return find_equipment(equipment_id)
 
@@ -202,6 +215,32 @@ def get_automation_events(
     return (
         database.query(AutomationEventRecord)
         .order_by(AutomationEventRecord.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+
+@app.post(
+    "/api/agent/chat",
+    response_model=AgentChatResponse,
+)
+def chat_with_service_agent(
+    request: AgentChatRequest,
+    database: Session = Depends(get_database_session),
+):
+    return handle_agent_chat(request, database)
+
+
+@app.get(
+    "/api/agent/interactions",
+    response_model=list[AgentInteractionResponse],
+)
+def get_agent_interactions(
+    database: Session = Depends(get_database_session),
+):
+    return (
+        database.query(AgentInteractionRecord)
+        .order_by(AgentInteractionRecord.created_at.desc())
         .limit(50)
         .all()
     )
