@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+
 import type { LucideIcon } from "lucide-react";
+
 import {
   Activity,
   AlertTriangle,
@@ -8,7 +10,6 @@ import {
   BookOpen,
   Bot,
   Boxes,
-  CheckCircle2,
   ChevronRight,
   CircleGauge,
   LayoutDashboard,
@@ -21,6 +22,7 @@ import {
   Workflow,
   Wrench,
 } from "lucide-react";
+
 import {
   Area,
   AreaChart,
@@ -29,12 +31,16 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
-import { TelemetryPanel } from "./components/TelemetryPanel";
+
+import { AutomationPanel } from "./components/AutomationPanel";
 import { ServiceCasePanel } from "./components/ServiceCasePanel";
+import { TelemetryPanel } from "./components/TelemetryPanel";
+
 import {
   fetchEquipment,
   type ApiEquipment,
 } from "./services/fieldflowApi";
+
 import "./App.css";
 
 type EquipmentStatus =
@@ -516,42 +522,7 @@ function App() {
               </div>
             </article>
 
-            <article className="panel automation-panel">
-              <div className="panel-heading">
-                <div>
-                  <p>WORKFLOW STATUS</p>
-                  <h2>Automation health</h2>
-                </div>
-
-                <span className="healthy-label">
-                  <CheckCircle2 size={15} />
-                  Healthy
-                </span>
-              </div>
-
-              <div className="automation-score">
-                <div>
-                  <strong>98.7%</strong>
-                  <span>Successful runs</span>
-                </div>
-                <CircleGauge size={55} strokeWidth={1.5} />
-              </div>
-
-              <div className="automation-list">
-                <div>
-                  <span>Critical case routing</span>
-                  <strong>Passing</strong>
-                </div>
-                <div>
-                  <span>Dealer assignment</span>
-                  <strong>Passing</strong>
-                </div>
-                <div>
-                  <span>Telemetry synchronization</span>
-                  <strong>Passing</strong>
-                </div>
-              </div>
-            </article>
+            <AutomationPanel equipmentId={selectedEquipment.id} />
           </section>
         </div>
       </main>

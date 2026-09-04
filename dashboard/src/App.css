@@ -1166,6 +1166,73 @@ button {
   border-top: 1px solid #eceee9;
 }
 
+.automation-run-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  color: #5f420d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid #e4cf91;
+  border-radius: 9px;
+  background: #fff7de;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.automation-run-button:hover {
+  background: #ffedb8;
+  transform: translateY(-1px);
+}
+
+.automation-run-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
+}
+
+.automation-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 10px;
+  color: #486c5e;
+  font-size: 0.66rem;
+  line-height: 1.4;
+  border-radius: 9px;
+  background: #edf8f3;
+}
+
+.automation-result strong {
+  color: var(--green);
+  font-size: 0.7rem;
+}
+
+.automation-result.duplicate_prevented {
+  color: #80651d;
+  background: #fff7df;
+}
+
+.automation-result.duplicate_prevented strong {
+  color: #9b680d;
+}
+
+.automation-error {
+  margin: 0 0 14px;
+  padding: 10px;
+  color: var(--red);
+  font-size: 0.68rem;
+  border-radius: 9px;
+  background: var(--red-soft);
+}
+
 @media (max-width: 660px) {
   .telemetry-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
