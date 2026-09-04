@@ -5,8 +5,17 @@ from fastapi import status as http_status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
+from api.app.automation_schemas import (
+    AutomationEvaluationResponse,
+    AutomationEventResponse,
+)
+from api.app.automation_service import evaluate_equipment_automation
 from api.app.database import create_database, get_database_session
-from api.app.database_models import EquipmentRecord, ServiceCaseRecord
+from api.app.database_models import (
+    AutomationEventRecord,
+    EquipmentRecord,
+    ServiceCaseRecord,
+)
 from api.app.database_seed import seed_database
 from api.app.equipment_data import EQUIPMENT_RECORDS
 from api.app.models import Equipment, TelemetryReading
@@ -33,7 +42,7 @@ app = FastAPI(
         "Equipment telemetry and service operations API "
         "for the FieldFlow AI platform."
     ),
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
@@ -64,7 +73,7 @@ def find_equipment(equipment_id: str) -> Equipment:
 def get_api_information():
     return {
         "name": "FieldFlow Equipment API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "status": "operational",
         "documentation": "/docs",
     }
@@ -155,3 +164,44 @@ def create_service_case(
     database.refresh(service_case)
 
     return service_case
+
+
+@app.post(
+    "/api/automations/evaluate/{equipment_id}",
+    response_model=AutomationEvaluationResponse,
+)
+def evaluate_automation(
+    equipment_id: str,
+    database: Session = Depends(get_database_session),
+):
+    equipment = find_equipment(equipment_id)
+
+    telemetry, event = evaluate_equipment_automation(
+        equipment,
+        database,
+    )
+
+    return AutomationEvaluationResponse(
+        equipment_id=equipment_id,
+        outcome=event.outcome,
+        message=event.details,
+        service_case_id=event.service_case_id,
+        event_id=event.event_id,
+        evaluated_at=event.created_at,
+        telemetry=telemetry,
+    )
+
+
+@app.get(
+    "/api/automation-events",
+    response_model=list[AutomationEventResponse],
+)
+def get_automation_events(
+    database: Session = Depends(get_database_session),
+):
+    return (
+        database.query(AutomationEventRecord)
+        .order_by(AutomationEventRecord.created_at.desc())
+        .limit(50)
+        .all()
+    )

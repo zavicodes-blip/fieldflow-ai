@@ -34,6 +34,10 @@ class EquipmentRecord(Base):
         back_populates="equipment",
         cascade="all, delete-orphan",
     )
+    automation_events: Mapped[list[AutomationEventRecord]] = relationship(
+        back_populates="equipment",
+        cascade="all, delete-orphan",
+    )
 
 
 class ServiceCaseRecord(Base):
@@ -83,4 +87,48 @@ class ServiceCaseRecord(Base):
 
     equipment: Mapped[EquipmentRecord] = relationship(
         back_populates="service_cases",
+    )
+    automation_events: Mapped[list[AutomationEventRecord]] = relationship(
+        back_populates="service_case",
+    )
+
+
+class AutomationEventRecord(Base):
+    __tablename__ = "automation_events"
+    __table_args__ = (
+        Index(
+            "idx_automation_events_equipment_created",
+            "equipment_id",
+            "created_at",
+        ),
+    )
+
+    event_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    equipment_id: Mapped[str] = mapped_column(
+        String(20),
+        ForeignKey("equipment.equipment_id", ondelete="CASCADE"),
+        index=True,
+    )
+    event_type: Mapped[str] = mapped_column(String(50))
+    outcome: Mapped[str] = mapped_column(String(40))
+    details: Mapped[str] = mapped_column(Text)
+    service_case_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("service_cases.case_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    equipment: Mapped[EquipmentRecord] = relationship(
+        back_populates="automation_events",
+    )
+    service_case: Mapped[ServiceCaseRecord | None] = relationship(
+        back_populates="automation_events",
     )
