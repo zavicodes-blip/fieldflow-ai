@@ -5,6 +5,7 @@ import {
   Clock3,
   LoaderCircle,
 } from "lucide-react";
+
 import {
   fetchServiceCases,
   type ApiServiceCase,
@@ -35,12 +36,15 @@ function formatRelativeTime(timestamp: string): string {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-function formatPriority(priority: ApiServiceCase["priority"]): string {
+function formatPriority(
+  priority: ApiServiceCase["priority"],
+): string {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
 }
 
 export function ServiceCasePanel() {
-  const [serviceCases, setServiceCases] = useState<ApiServiceCase[]>([]);
+  const [serviceCases, setServiceCases] =
+    useState<ApiServiceCase[]>([]);
   const [loadStatus, setLoadStatus] =
     useState<LoadStatus>("loading");
 
@@ -64,16 +68,34 @@ export function ServiceCasePanel() {
       }
     }
 
+    function handleServiceCaseCreated() {
+      void loadServiceCases();
+    }
+
     void loadServiceCases();
+
+    window.addEventListener(
+      "fieldflow:service-case-created",
+      handleServiceCaseCreated,
+    );
 
     return () => {
       requestCancelled = true;
+
+      window.removeEventListener(
+        "fieldflow:service-case-created",
+        handleServiceCaseCreated,
+      );
     };
   }, []);
 
   const openCaseCount = serviceCases.filter(
     (serviceCase) => serviceCase.status !== "resolved",
   ).length;
+
+  function openServiceAgent() {
+    window.dispatchEvent(new Event("fieldflow:open-agent"));
+  }
 
   return (
     <article className="panel case-panel">
@@ -84,7 +106,9 @@ export function ServiceCasePanel() {
         </div>
 
         <span className="case-count">
-          {loadStatus === "success" ? `${openCaseCount} open` : "Loading"}
+          {loadStatus === "success"
+            ? `${openCaseCount} open`
+            : "Loading"}
         </span>
       </div>
 
@@ -122,10 +146,11 @@ export function ServiceCasePanel() {
                 </span>
 
                 <b>{serviceCase.title}</b>
+
                 <small>
                   {serviceCase.equipment_id}
                   {serviceCase.assigned_to
-                    ? ` · ${serviceCase.assigned_to}`
+                    ? ` | ${serviceCase.assigned_to}`
                     : ""}
                 </small>
 
@@ -141,14 +166,20 @@ export function ServiceCasePanel() {
         </div>
       )}
 
-      <button className="agent-action" type="button">
+      <button
+        className="agent-action"
+        onClick={openServiceAgent}
+        type="button"
+      >
         <span>
           <Bot size={19} />
         </span>
+
         <div>
           <strong>Ask Service Agent</strong>
           <small>Investigate an equipment issue</small>
         </div>
+
         <ChevronRight size={17} />
       </button>
     </article>
