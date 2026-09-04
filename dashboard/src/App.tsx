@@ -33,6 +33,7 @@ import {
 } from "recharts";
 
 import { AutomationPanel } from "./components/AutomationPanel";
+import { ServiceAgentPanel } from "./components/ServiceAgentPanel";
 import { ServiceCasePanel } from "./components/ServiceCasePanel";
 import { TelemetryPanel } from "./components/TelemetryPanel";
 
@@ -526,6 +527,8 @@ function App() {
           </section>
         </div>
       </main>
+
+      <ServiceAgentPanel />
     </div>
   );
 }
